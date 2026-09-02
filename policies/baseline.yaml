@@ -1,0 +1,27 @@
+version: 1
+profile: conservative-vps
+score:
+  pass: 0
+  warn: 3
+  fail: 8
+controls:
+  ssh:
+    permit_root_login: false
+    password_authentication: false
+    x11_forwarding: false
+  network:
+    accept_redirects: false
+    send_redirects: false
+    accept_source_route: false
+  firewall:
+    required: true
+  intrusion_prevention:
+    recommended: true
+  docker:
+    protect_socket: true
+  updates:
+    security_updates_required: true
+remediation:
+  require_backup: true
+  require_dry_run_for_first_apply: true
+  verify_after_change: true

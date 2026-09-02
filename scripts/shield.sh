@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+IFS=$'\n\t'
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPORT_DIR="${VPS_SHIELD_REPORT_DIR:-/var/lib/vps-shield/reports}"
+BACKUP_DIR="${VPS_SHIELD_BACKUP_DIR:-/var/lib/vps-shield/backups}"
+mkdir -p "$REPORT_DIR" "$BACKUP_DIR" 2>/dev/null || true
+source "$ROOT_DIR/modules/audit.sh"
+source "$ROOT_DIR/modules/harden.sh"
+
+usage(){ cat <<'EOF'
+VPS Shield
+
+Usage:
+  sudo ./scripts/shield.sh audit [--json]
+  sudo ./scripts/shield.sh harden [--dry-run]
+  sudo ./scripts/shield.sh verify
+  sudo ./scripts/shield.sh rollback [backup-dir]
+  sudo ./scripts/shield.sh version
+EOF
+}
+
+require_root(){ [[ $EUID -eq 0 ]] || { echo "Run as root (sudo)." >&2; exit 1; }; }
+
+case "${1:-}" in
+  audit)
+    shift; json=0; [[ "${1:-}" == "--json" ]] && json=1
+    run_audit "$json" "$REPORT_DIR"
+    ;;
+  harden)
+    shift; require_root; dry=0; [[ "${1:-}" == "--dry-run" ]] && dry=1
+    run_harden "$dry" "$BACKUP_DIR"
+    ;;
+  verify)
+    run_audit 0 "$REPORT_DIR"; ;;
+  rollback)
+    require_root; rollback_harden "${2:-} "$BACKUP_DIR"; ;;
+  version)
+    echo "VPS Shield 0.2.0"; ;;
+  *) usage; exit 2 ;;
+esac

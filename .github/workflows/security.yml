@@ -1,0 +1,22 @@
+name: VPS Shield CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax
+        run: |
+          bash -n scripts/shield.sh
+          bash -n modules/audit.sh
+          bash -n modules/harden.sh
+      - name: Regression tests
+        run: bash tests/test_audit.sh
+      - name: Repository secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -21,8 +21,17 @@ EOF
 }
 require_root(){ [[ $EUID -eq 0 ]] || { echo "Run as root (sudo)." >&2; exit 1; }; }
 case "${1:-}" in
-  audit) shift; json=0; [[ "${1:-}" == "--json" ]] && json=1; run_audit "$json" "$REPORT_DIR" ;;
-  harden) shift; require_root; dry=1; [[ "${1:-}" == "--apply" ]] && dry=0; [[ "${1:-}" == "--dry-run" ]] && dry=1; run_harden "$dry" "$BACKUP_DIR" ;;
+  audit)
+    shift; json=0
+    if [[ "${1:-}" == "--json" ]]; then json=1; fi
+    run_audit "$json" "$REPORT_DIR"
+    ;;
+  harden)
+    shift; require_root; dry=1
+    if [[ "${1:-}" == "--apply" ]]; then dry=0; fi
+    if [[ "${1:-}" == "--dry-run" ]]; then dry=1; fi
+    run_harden "$dry" "$BACKUP_DIR"
+    ;;
   verify) run_audit 0 "$REPORT_DIR" ;;
   integrations) integration_status ;;
   rollback) require_root; rollback_harden "${2:-}" ;;

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run VPS Shield security audit periodically
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=6h
+Persistent=true
+RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target

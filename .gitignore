@@ -1,0 +1,9 @@
+*.log
+*.tmp
+.env
+.env.*
+!.env.example
+reports/
+backups/
+.vps-shield/
+.DS_Store

@@ -1,204 +1,291 @@
 # VPS Shield
 
-> **Defensive Linux VPS security toolkit for developers, self-hosters and small infrastructure teams — audit, score, harden, verify, rollback and continuously improve server security.**
+> **Defensive Linux VPS security toolkit for developers, self-hosters and small infrastructure teams — audit, research, score, harden, verify, rollback and continuously improve server security.**
 
-VPS Shield turns scattered VPS-security tasks into a repeatable, evidence-driven operating loop:
+VPS Shield turns scattered VPS-security work into a repeatable, evidence-driven operating system:
 
-**discover → audit → score → explain → plan → backup → harden → verify → monitor → learn**
+**discover → research → audit → score → explain → plan → backup → harden → verify → monitor → learn**
 
-It is designed for the reality of modern developer infrastructure: Linux VPSs running Docker, AI workloads, automation, SaaS applications, reverse proxies, databases, CI/CD agents and platforms such as Coolify. The goal is not to add another dashboard that hides complexity. The goal is to make the security work around your server **simpler, safer, inspectable and repeatable**.
+It is built for modern developer infrastructure: Linux VPSs running Docker, AI workloads, automation, SaaS applications, reverse proxies, databases, CI/CD agents and platforms such as Coolify.
+
+The goal is not another dashboard or another pile of shell commands. The goal is to make infrastructure security **simpler to deploy, easier to understand, safer to change, easier to verify and continuously improvable**.
 
 ---
 
 ## Why VPS Shield exists
 
-A VPS often becomes the foundation for an entire product. One machine may host the application, Docker runtime, database, reverse proxy, automation workers, AI services, CI/CD and secrets.
+A VPS can become the foundation of an entire product. One machine may host applications, Docker, databases, reverse proxies, automation, AI services, CI/CD and secrets.
 
-That creates a practical problem: security is usually handled as a collection of one-off commands and blog-post checklists.
-
-VPS Shield converts that into an operating model:
+Security is too often managed through scattered commands, copied blog-post checklists and undocumented operator knowledge. VPS Shield turns that into an executable lifecycle.
 
 | Without VPS Shield | With VPS Shield |
 |---|---|
-| Manual security checklist | Repeatable audit lifecycle |
+| Manual security checklist | Repeatable security lifecycle |
 | Guessing what is exposed | Evidence from the running host |
-| Hardening by copy/paste | Dry-run → backup → change → verify |
-| Risky SSH changes | Syntax validation + rollback path |
-| Security knowledge in someone's head | Versioned policy + documented checks |
+| Searching randomly after a finding | Multi-aspect research with evidence fallbacks |
+| Copy/paste hardening | Dry-run → backup → change → verify |
+| Risky SSH changes | Validation + rollback path |
+| Security knowledge in someone's head | Versioned policy + tests + documentation |
 | Different servers configured differently | Consistent baseline |
 | “I think it is secure” | Measurable posture + evidence |
 | Security after an incident | Security as a recurring loop |
-| Tool sprawl | Explicit integration/adaptor boundary |
+| Days/weeks spent debugging setup | One installation path + environment doctor |
+| Tool sprawl | Explicit adapter boundaries |
 
-VPS Shield does **not** promise an impenetrable server. It provides a disciplined control layer for reducing common configuration and operational risk while keeping changes understandable and reversible.
+VPS Shield does **not** promise an impenetrable server. It provides a disciplined control layer for reducing common configuration and operational risk while keeping security work understandable and reversible.
 
 ---
 
-## Core lifecycle
+# System architecture
 
 ```text
-                    ┌──────────────────────┐
-                    │      DISCOVER        │
-                    │ OS / services / SSH  │
-                    │ firewall / Docker    │
-                    └──────────┬───────────┘
-                               ↓
-                    ┌──────────────────────┐
-                    │        AUDIT         │
-                    │ Collect host evidence│
-                    │ without changing it  │
-                    └──────────┬───────────┘
-                               ↓
-                    ┌──────────────────────┐
-                    │    SCORE + EXPLAIN   │
-                    │ PASS / WARN / FAIL   │
-                    │ + actionable context │
-                    └──────────┬───────────┘
-                               ↓
-                    ┌──────────────────────┐
-                    │ PLAN + DRY-RUN       │
-                    │ Decide what should    │
-                    │ actually change       │
-                    └──────────┬───────────┘
-                               ↓
-                    ┌──────────────────────┐
-                    │ BACKUP + HARDEN      │
-                    │ Controlled mutation  │
-                    └──────────┬───────────┘
-                               ↓
-                    ┌──────────────────────┐
-                    │ VERIFY               │
-                    │ Prove intended state │
-                    │ after the change     │
-                    └──────────┬───────────┘
-                               ↓
-                    ┌──────────────────────┐
-                    │ MONITOR              │
-                    │ Recurring evidence   │
-                    └──────────┬───────────┘
-                               ↓
-                    ┌──────────────────────┐
-                    │ LEARN                │
-                    │ Tests / policy /     │
-                    │ remediation improve │
-                    └──────────┬───────────┘
-                               │
-                               └───────────→ next audit
+                         VPS SHIELD
+┌──────────────────────────────────────────────────────────────┐
+│                         OPERATOR                             │
+│              CLI • CI/CD • provisioning • systemd           │
+└────────────────────────────┬─────────────────────────────────┘
+                             ↓
+┌──────────────────────────────────────────────────────────────┐
+│                    ORCHESTRATION LAYER                       │
+│   doctor • research • audit • score • plan • harden • verify │
+└───────────────┬───────────────────────┬──────────────────────┘
+                ↓                       ↓
+┌────────────────────────┐   ┌─────────────────────────────────┐
+│   EVIDENCE / RESEARCH  │   │       SECURITY ENGINE            │
+│ cloud search (optional)│   │ collectors → checks → findings  │
+│ local fallback         │   │ policy → score → remediation    │
+│ direct URL evidence    │   │ backup → validate → verify      │
+└────────────┬───────────┘   └────────────────┬────────────────┘
+             └────────────────┬───────────────┘
+                              ↓
+┌──────────────────────────────────────────────────────────────┐
+│                 INTEGRATION / ADAPTER LAYER                  │
+│ Docker • Coolify • CrowdSec • Fail2ban • Trivy • Falco       │
+│ Wazuh • Cloudflare • systemd                                 │
+└────────────────────────────┬─────────────────────────────────┘
+                             ↓
+┌──────────────────────────────────────────────────────────────┐
+│                         LINUX VPS                            │
+│ SSH • firewall • services • packages • kernel • containers   │
+│ permissions • processes • application/runtime environment    │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-The important design choice is that **security is a loop, not a one-time setup script**.
+The architecture deliberately separates **observation, research, policy, mutation, integrations and verification**. That keeps the core small while allowing the system to grow into deeper security automation and fleet capabilities.
+
+---
+
+# Core security lifecycle
+
+```text
+DISCOVER
+   ↓
+AUDIT ───────────────→ collect host evidence without mutation
+   ↓
+SCORE + EXPLAIN ─────→ identify risk and next action
+   ↓
+RESEARCH ────────────→ investigate multiple relevant aspects
+   ↓
+PLAN
+   ↓
+DRY-RUN ─────────────→ preview intended mutations
+   ↓
+BACKUP
+   ↓
+APPLY ───────────────→ controlled remediation
+   ↓
+VALIDATE ────────────→ reject unsafe configuration
+   ↓
+VERIFY ──────────────→ prove intended state
+   ↓
+MONITOR ─────────────→ detect drift
+   ↓
+LEARN ───────────────→ improve tests, policy and remediation
+   └──────────────────────────────→ next audit
+```
+
+**Security is a loop, not a one-time setup script.**
 
 ---
 
 # Repository architecture
 
-The repository is intentionally modular so the security engine can evolve without turning the CLI into a monolith.
-
 ```text
 Vps-Shield/
-├── .github/
-│   └── workflows/
-│       └── security.yml          # CI: syntax, regression tests, secret scanning
-│
+├── .github/workflows/
+│   └── security.yml              # CI, syntax, regression and secret scanning
 ├── config/
-│   └── security.env.example      # Optional operator configuration template
-│
+│   └── security.env.example      # Optional operator configuration
 ├── docs/
-│   ├── architecture.md           # System architecture and design boundaries
-│   ├── deployment.md             # Installation and deployment runbook
-│   ├── hardening.md              # Hardening procedure and safety guidance
-│   ├── integrations.md           # Integration/adaptor playbook
-│   ├── roadmap.md                # Evolution toward fleet/platform capabilities
-│   └── threat-model.md            # Threats, assumptions and trust boundaries
-│
+│   ├── architecture.md           # System design and boundaries
+│   ├── deployment.md             # Deployment runbook
+│   ├── hardening.md              # Hardening procedure
+│   ├── integrations.md           # Adapter playbook
+│   ├── one-click.md              # Installation/environment contract
+│   ├── research.md               # Multi-aspect research architecture
+│   ├── roadmap.md                # Evolution path
+│   └── threat-model.md            # Threats and trust boundaries
 ├── integrations/
-│   └── README.md                 # Integration layer conventions
-│
+│   └── README.md                 # Adapter conventions
 ├── modules/
-│   ├── audit.sh                  # Read-only host collectors and security checks
-│   ├── harden.sh                 # Controlled remediation + backup/rollback
-│   └── integrations.sh           # Read-only integration capability probes
-│
+│   ├── audit.sh                  # Read-only host checks
+│   ├── harden.sh                 # Controlled remediation
+│   ├── integrations.sh           # Integration probes
+│   └── research.sh               # Multi-aspect evidence/research engine
 ├── policies/
-│   └── baseline.yaml             # Versioned conservative VPS security baseline
-│
+│   └── baseline.yaml             # Versioned security baseline
 ├── scripts/
-│   └── shield.sh                 # Main CLI entry point
-│
+│   └── shield.sh                 # Main CLI
 ├── systemd/
-│   ├── vps-shield-audit.service  # Recurring audit service template
-│   └── vps-shield-audit.timer    # Scheduled evidence collection
-│
+│   ├── vps-shield-audit.service  # Audit service template
+│   └── vps-shield-audit.timer    # Recurring schedule
 ├── tests/
-│   └── test_audit.sh             # Shell syntax + audit smoke/regression tests
-│
-├── install.sh                    # Installer + CLI wrapper setup
+│   └── test_audit.sh             # Regression/smoke tests
+├── install.sh                    # One-click installer + self-check
 ├── Makefile                      # Developer shortcuts
-├── SECURITY.md                   # Vulnerability reporting and security policy
-├── CONTRIBUTING.md               # Contribution workflow
-├── CHANGELOG.md                  # Version history
-└── LICENSE                       # MIT license
+├── SECURITY.md
+├── CONTRIBUTING.md
+├── CHANGELOG.md
+└── LICENSE
 ```
 
-### Module boundaries
+### Design boundaries
 
-**CLI** is the operator interface. It should stay thin.
-
-**Audit** is responsible for collecting evidence and evaluating the current host posture without mutating the system.
-
-**Policy** defines what “good” looks like. This is intentionally separated from the collection engine so future policy profiles can evolve independently.
-
-**Hardening** contains controlled mutations. It is intentionally conservative and requires explicit `--apply` for changes.
-
-**Integrations** detect whether external security/control-plane capabilities are available. They are adapters, not hidden dependencies.
-
-**Tests + CI** turn security behavior into a regression-controlled asset rather than a collection of undocumented assumptions.
+- **CLI:** thin operator interface.
+- **Doctor:** verifies the environment contract before operation.
+- **Research:** gathers contextual evidence without executing external instructions.
+- **Audit:** observes and evaluates; it should remain read-only.
+- **Policy:** defines the desired security state independently of collection.
+- **Hardening:** performs explicit, controlled mutations.
+- **Integrations:** provide optional capabilities without becoming hidden dependencies.
+- **Tests/CI:** convert security behavior into a regression-controlled asset.
 
 ---
 
-# What VPS Shield audits today
+# One-click installation
+
+The installation experience is a first-class part of the architecture. Users should not need to spend days or weeks resolving setup problems before reaching the useful part of the product.
+
+From a checkout:
+
+```bash
+sudo bash install.sh
+```
+
+The installer:
+
+1. checks root privileges and required local commands;
+2. installs the runtime under `/usr/local/lib/vps-shield`;
+3. creates the `vps-shield` command;
+4. creates protected report, backup and research directories;
+5. runs a version check;
+6. runs the environment doctor;
+7. stops with an actionable failure if a required baseline capability is missing.
+
+Optional capabilities are detected rather than silently installing arbitrary software.
+
+Then:
+
+```bash
+sudo vps-shield doctor
+sudo vps-shield audit
+```
+
+### Why this matters
+
+The installation path becomes reusable infrastructure for future provisioning, CI/CD images, cloud-init, Ansible/Terraform adapters and fleet onboarding instead of another manual setup guide.
+
+One-click means **one entry point with a predictable contract**, not uncontrolled mutation of the host.
+
+See `docs/one-click.md` for the environment contract.
+
+---
+
+# Multi-aspect auto-research
+
+Security findings frequently need context. VPS Shield therefore includes a provider-neutral research layer.
+
+For a topic, it investigates multiple angles:
+
+```text
+Finding / question
+       ↓
+┌───────────────────────────────┐
+│ Threat model                  │
+│ Configuration                 │
+│ Vulnerabilities               │
+│ Deployment                    │
+│ Recovery                      │
+│ Verification                  │
+└───────────────┬───────────────┘
+                ↓
+     Optional cloud search
+                ↓
+       Local evidence fallback
+                ↓
+        Direct URL evidence
+                ↓
+     Persistent research bundle
+```
+
+Examples:
+
+```bash
+sudo vps-shield research "Docker socket security"
+sudo vps-shield research "OpenSSH hardening" --cloud
+sudo vps-shield research "Coolify VPS exposure" --url https://example.com/security-guide
+```
+
+Cloud search is optional and configured through `VPS_SHIELD_SEARCH_URL` and an optional `VPS_SHIELD_SEARCH_HEADER`. Without cloud credentials, the system remains usable with local evidence and operator-selected direct URLs.
+
+Research is **read-only**. External content is treated as evidence to review, never as instructions to execute.
+
+See `docs/research.md` for the provider/fallback model.
+
+---
+
+# What VPS Shield audits
 
 The current audit engine covers practical VPS security signals including:
 
-- Effective OpenSSH configuration using `sshd -T`, including drop-in configuration
-- Root login posture
-- Password authentication posture
-- X11 forwarding
-- SSH configuration/file permissions
-- Firewall presence across UFW, firewalld, nftables and iptables
-- Listening sockets and service exposure
-- systemd/service inventory signals
-- Kernel/sysctl network posture
-- IPv4 redirects and source-routing posture
-- Fail2ban and CrowdSec availability
-- Docker daemon/socket posture
-- SUID/SGID discovery
-- World-writable file discovery
-- Package/update posture for common Linux package managers
-- Redacted secret-pattern detection in relevant system/application locations
-- Human-readable reports
-- JSON evidence for automation and future APIs
+- effective OpenSSH configuration via `sshd -T`, including drop-ins;
+- root login and password authentication posture;
+- X11 forwarding;
+- SSH configuration/file permissions;
+- UFW, firewalld, nftables and iptables detection;
+- listening sockets and service exposure;
+- systemd/service inventory signals;
+- kernel/sysctl network posture;
+- IPv4 redirects and source routing;
+- Fail2ban/CrowdSec availability;
+- Docker daemon/socket posture;
+- SUID/SGID discovery;
+- world-writable file discovery;
+- package/update posture;
+- redacted secret-pattern detection;
+- human-readable reports;
+- JSON evidence for automation.
 
-The audit is designed to answer three practical questions:
+The audit answers:
 
 1. **What is exposed or misconfigured?**
 2. **How serious is it relative to the baseline?**
-3. **What should the operator investigate or change next?**
+3. **What should be investigated or changed next?**
 
 ---
 
 # Hardening path
 
-Hardening is deliberately separated from auditing. A server should be able to be inspected without being changed.
+Hardening is deliberately separated from auditing.
 
 ```text
 AUDIT
   ↓
-Review findings
+REVIEW FINDINGS
   ↓
 DRY-RUN
   ↓
-Review intended mutations
+REVIEW MUTATIONS
   ↓
 BACKUP
   ↓
@@ -213,222 +300,166 @@ VERIFY ACTUAL STATE
 KEEP OR ROLLBACK
 ```
 
-### Current conservative remediation
-
-VPS Shield can safely target selected high-value baseline changes such as:
+Current conservative remediation includes:
 
 - `PermitRootLogin no`
 - `PasswordAuthentication no`
 - `X11Forwarding no`
 - conservative network redirect/source-route sysctl settings
 
-Before SSH changes are reloaded, configuration syntax is validated. A backup is created before mutation, and rollback is available.
+SSH configuration is syntax-validated before reload. Backups are created before supported mutation and rollback is available.
 
-### Why firewall changes are treated differently
-
-Automatically enabling or rewriting a firewall is intentionally conservative because an incorrect rule can immediately disconnect a remote operator.
-
-VPS Shield therefore **detects and reports firewall posture rather than blindly opening/closing ports**. Future policy-aware firewall automation should require explicit intent, service discovery, allow-list validation and a recovery path.
+Firewall automation remains conservative because an incorrect remote firewall change can cause immediate lockout. VPS Shield detects and reports firewall posture rather than blindly rewriting network access.
 
 ---
 
 # Defense in depth
 
-VPS Shield is not intended to replace every security product. It acts as the **orchestration and posture layer around the host**, while specialized tools provide additional controls.
+VPS Shield is the **host posture/orchestration layer**, not a claim that one tool replaces the entire security stack.
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│                    APPLICATION / DATA                        │
-│  SaaS • AI • APIs • databases • automation • secrets         │
-├──────────────────────────────────────────────────────────────┤
-│                 PLATFORM / CONTAINER LAYER                   │
-│  Docker • Coolify • reverse proxy • service isolation        │
-├──────────────────────────────────────────────────────────────┤
-│                    RUNTIME DEFENSE                            │
-│  Falco • process/runtime signals • container behavior        │
-├──────────────────────────────────────────────────────────────┤
-│                INTRUSION / HOST MONITORING                   │
-│  CrowdSec • Fail2ban • Wazuh                                 │
-├──────────────────────────────────────────────────────────────┤
-│                  ACCESS / EDGE CONTROL                        │
-│  SSH • firewall • Cloudflare Zero Trust / Tunnel             │
-├──────────────────────────────────────────────────────────────┤
-│                     HOST BASELINE                            │
-│  Linux • sysctl • packages • permissions • services           │
-├──────────────────────────────────────────────────────────────┤
-│                      VPS SHIELD                              │
-│  discover → audit → score → remediate → verify → learn       │
-└──────────────────────────────────────────────────────────────┘
+APPLICATION / DATA
+        ↓
+PLATFORM / CONTAINERS
+ Docker • Coolify • reverse proxy
+        ↓
+RUNTIME DEFENSE
+ Falco • runtime behavior
+        ↓
+INTRUSION / HOST MONITORING
+ CrowdSec • Fail2ban • Wazuh
+        ↓
+ACCESS / EDGE
+ SSH • firewall • Cloudflare
+        ↓
+HOST BASELINE
+ Linux • sysctl • packages • permissions • services
+        ↓
+VPS SHIELD CONTROL LOOP
+ discover → audit → remediate → verify → learn
 ```
 
-### Integration philosophy
+Optional/adapter targets include Docker, Coolify, CrowdSec, Fail2ban, Trivy, Falco, Wazuh, Cloudflare Zero Trust/Tunnel and systemd.
 
-Planned/optional integrations include:
-
-| Layer | Integration | Role |
-|---|---|---|
-| Access/edge | Cloudflare Zero Trust / Tunnel | Reduce direct exposure and centralize access controls |
-| Platform | Coolify | Application/control-plane posture awareness |
-| Containers | Docker | Isolation and container configuration evidence |
-| Intrusion prevention | CrowdSec / Fail2ban | Detect/block abusive authentication and traffic patterns |
-| Runtime | Falco | Runtime behavior and syscall-based detection |
-| Vulnerability | Trivy | Image/filesystem vulnerability and SBOM evidence |
-| Host/SIEM | Wazuh | Host telemetry, monitoring and security events |
-| Scheduling | systemd | Recurring audits and evidence collection |
-
-These integrations remain explicit. VPS Shield should never silently install a third-party security product, modify DNS, expose a port or change authentication policy merely because an adapter exists.
+The adapter boundary is intentional: an adapter must not silently install software, modify DNS, open ports or change authentication merely because it is available.
 
 ---
 
-# The security loop
-
-The long-term advantage is not a single hardening run. It is the **feedback loop**.
+# The security feedback loop
 
 ```text
-┌──────────────┐
-│ Real server  │
-└──────┬───────┘
-       ↓
-   Collect evidence
-       ↓
-   Detect deviation
-       ↓
-   Score + explain
-       ↓
-   Remediate safely
-       ↓
-   Verify outcome
-       ↓
-   Store evidence
-       ↓
-   Observe over time
-       ↓
-   Find failures / false positives
-       ↓
-   Add regression test
-       ↓
-   Improve policy / check
-       ↓
-   Release improvement
-       └──────────────→ next server audit
+Real server
+   ↓
+Evidence
+   ↓
+Finding
+   ↓
+Research / context
+   ↓
+Remediation
+   ↓
+Verification
+   ↓
+Historical evidence
+   ↓
+Drift / failure / false positive
+   ↓
+Regression test
+   ↓
+Policy/check improvement
+   ↓
+Release
+   └────────────────→ better future audits
 ```
 
-This creates a compounding asset:
+This is the compounding asset of the project:
 
-**production incident → reproducible case → regression test → better check/policy → safer remediation → better future audits.**
-
-Security knowledge becomes executable and version-controlled instead of remaining tribal knowledge.
+**production problem → reproducible case → test → better check/policy → safer remediation → stronger future system.**
 
 ---
 
-# How this makes development easier
+# How it benefits development
 
-VPS Shield is designed to reduce the security tax on development rather than become another operational burden.
+### Faster bring-up
+One audit replaces a large portion of manual security inspection.
 
-### 1. Faster server bring-up
+### Safer changes
+Dry-run, backup, validation, verification and rollback reduce operational risk.
 
-Instead of manually remembering dozens of security checks, run one audit and get a structured posture report.
+### Less context switching
+SSH, firewall, services, kernel, packages and Docker posture become one workflow.
 
-### 2. Safer changes
+### Repeatable environments
+The same baseline can be evaluated across development, staging and production.
 
-Developers can inspect proposed remediation before applying it. Backups and verification reduce the risk of turning a security improvement into an outage.
+### Easier debugging
+Evidence helps separate application problems from host, network, SSH, firewall or runtime problems.
 
-### 3. Repeatability
-
-The same baseline can be applied and evaluated across development, staging and production hosts.
-
-### 4. Better debugging
-
-When deployment behavior changes, security evidence can help distinguish an application problem from a host, network, SSH, firewall or container-posture problem.
-
-### 5. Automation-friendly output
-
-JSON evidence creates a clean path toward CI/CD gates, dashboards, APIs, fleet inventory and historical posture analytics.
-
-### 6. Less context switching
-
-The developer does not need to remember which command checks SSH, which command checks listeners, which command checks Docker or which file contains the previous hardening decision. VPS Shield turns those checks into one workflow.
+### Automation-ready
+JSON evidence and stable CLI contracts create a path to CI/CD gates, APIs, dashboards and fleet management.
 
 ---
 
-# How this makes deployment and hosting easier
-
-A secure deployment pipeline should not end at “the application started.” It should include the host and runtime that actually serve the application.
-
-A practical flow becomes:
+# How it benefits deployment and hosting
 
 ```text
 Provision VPS
     ↓
-Install base OS updates
+Install OS/runtime
     ↓
-Install application/runtime stack
+Install VPS Shield
     ↓
-VPS Shield audit
+Doctor
     ↓
-Review score + evidence
+Audit
     ↓
-Dry-run remediation
+Research when needed
+    ↓
+Dry-run
     ↓
 Apply approved hardening
     ↓
 Deploy application
     ↓
-Verify host + application posture
+Verify
     ↓
-Install/enable recurring audit
+Recurring audit
     ↓
-Monitor drift
+Detect drift
     ↓
-Remediate / rollback / improve
+Remediate / rollback / learn
 ```
 
-This helps make hosting more predictable because security checks become part of the deployment lifecycle instead of a last-minute manual task.
+This moves security from a last-minute manual task into the normal deployment lifecycle.
 
-For infrastructure using Docker, Coolify, reverse proxies, Cloudflare or runtime-security tooling, VPS Shield provides a common posture layer while allowing each specialized system to keep its own responsibility.
+For Docker/Coolify/Cloudflare-based infrastructure, VPS Shield provides a common host posture layer while specialized systems retain their own responsibilities.
 
 ---
 
-# Developer workflow
+# CLI
 
-```bash
-# 1. Clone
-git clone https://github.com/MustafaAhmed007/Vps-Shield.git
-cd Vps-Shield
+| Command | Purpose | Host mutation |
+|---|---|---:|
+| `doctor` | Check environment contract | No |
+| `audit` | Collect/evaluate posture | No |
+| `audit --json` | Machine-readable evidence | No |
+| `research <topic>` | Multi-aspect research | No |
+| `research <topic> --cloud` | Use configured cloud search | No |
+| `research <topic> --url URL` | Add direct URL evidence | No |
+| `harden --dry-run` | Preview remediation | No |
+| `harden --apply` | Apply approved remediation | Yes |
+| `verify` | Re-evaluate state | No |
+| `integrations` | Probe integrations | No |
+| `rollback <backup-dir>` | Restore supported backup | Yes |
+| `version` | Show version | No |
 
-# 2. Install
-sudo bash install.sh
-
-# 3. Audit — read only
-sudo vps-shield audit
-
-# 4. Machine-readable evidence
-sudo vps-shield audit --json
-
-# 5. Preview hardening
-sudo vps-shield harden --dry-run
-
-# 6. Apply only after review
-sudo vps-shield harden --apply
-
-# 7. Verify
-sudo vps-shield verify
-
-# 8. Inspect available integrations
-sudo vps-shield integrations
-```
-
-**Important:** `harden` is dry-run by default. `--apply` is required for mutation.
-
-Always keep a second administrative session or out-of-band recovery path before changing remote-access configuration.
+`harden` is dry-run by default. `--apply` is required for mutation.
 
 ---
 
 # Recurring monitoring
 
-The repository includes systemd service/timer templates for recurring audit execution.
-
-The intended model is:
+The repository provides systemd service/timer templates:
 
 ```text
 systemd timer
@@ -437,241 +468,111 @@ VPS Shield audit
       ↓
 JSON evidence
       ↓
-local report/history
+local reports/history
       ↓
-future dashboard/API/alerting
+future alerting/dashboard/API
 ```
 
-This is deliberately lightweight. A single VPS should not need a heavyweight control plane just to answer whether its baseline has drifted.
+The lightweight local-first model avoids requiring a heavyweight control plane for a single VPS.
 
 ---
 
-# Security boundaries and safety principles
+# Engineering quality and safety
 
-VPS Shield follows several non-negotiable operational rules:
+Current safeguards include:
 
-- **Audit before mutation.**
-- **Dry-run before apply.**
-- **Backup before risky configuration changes.**
-- **Validate configuration before reload.**
-- **Verify after mutation.**
-- **Keep rollback available.**
-- **Do not silently install dependencies.**
-- **Do not silently change DNS or network exposure.**
-- **Do not print detected secrets.**
-- **Do not pretend a score proves security.**
-- **Do not make destructive firewall changes by default.**
-- **Treat integrations as explicit trust boundaries.**
+- Bash syntax checks;
+- audit smoke/regression tests;
+- GitHub Actions CI;
+- secret scanning with Gitleaks;
+- versioned baseline policy;
+- threat model and security policy;
+- dry-run-first remediation;
+- configuration validation before SSH reload;
+- backup and rollback support;
+- recurring audit templates.
 
-The project is defensive tooling. Operators remain responsible for understanding their application, network topology, credentials, backups and recovery access.
+Non-negotiable rules:
 
----
+- audit before mutation;
+- dry-run before apply;
+- backup before risky configuration changes;
+- validate before reload;
+- verify after mutation;
+- keep rollback available;
+- do not print detected secrets;
+- do not silently alter network exposure;
+- do not pretend a score proves security;
+- treat external integrations as explicit trust boundaries.
 
-# Policy as code
-
-The baseline lives in the repository instead of existing only in documentation.
-
-That creates a path toward:
-
-- multiple security profiles
-- environment-specific policies
-- organization-wide baselines
-- compliance mappings
-- policy versioning
-- CI security gates
-- fleet drift detection
-- machine-readable remediation plans
-
-The long-term direction is to make policy **portable, reviewable and testable**.
+Always maintain a second administrative session or out-of-band recovery path before changing remote access.
 
 ---
 
-# Evidence-first security
-
-VPS Shield separates **observation** from **interpretation**.
-
-A finding should ultimately be traceable to evidence from the running system:
-
-```text
-Host state
-   ↓
-Collector
-   ↓
-Raw signal
-   ↓
-Check
-   ↓
-Finding
-   ↓
-Severity / score
-   ↓
-Recommended action
-   ↓
-Verification
-```
-
-That makes the system easier to debug and significantly easier to evolve into an API, dashboard or fleet-management product later.
-
----
-
-# Current CLI surface
-
-| Command | Purpose | Mutates host? |
-|---|---|---:|
-| `audit` | Collect and evaluate security posture | No |
-| `audit --json` | Emit machine-readable evidence | No |
-| `harden --dry-run` | Preview remediation | No |
-| `harden --apply` | Apply approved conservative remediation | Yes |
-| `verify` | Verify expected hardening state | No |
-| `integrations` | Probe optional security integrations | No |
-| `rollback <backup-dir>` | Restore a supported backup | Yes |
-| `version` | Show CLI version | No |
-
----
-
-# CI and engineering quality
-
-Every security behavior that matters should become a testable behavior.
-
-Current engineering safeguards include:
-
-- Bash syntax checks
-- Audit smoke/regression tests
-- GitHub Actions CI
-- secret scanning through Gitleaks
-- versioned policy
-- documented threat model
-- security disclosure policy
-- contributor guidance
-
-Future development should favor **small, testable security primitives** over giant all-in-one automation scripts.
-
----
-
-# Roadmap: from VPS tool to security control plane
-
-The current repository establishes the foundation. The planned evolution is intentionally layered:
+# Roadmap
 
 ### Phase 1 — Host baseline
 
-- audit engine
-- scoring/evidence
-- conservative hardening
-- verification
-- rollback
-- policy
-- recurring audits
+Audit, scoring, evidence, conservative hardening, verification, rollback, policy and recurring audits.
 
 ### Phase 2 — Defense adapters
 
-- deeper Docker posture checks
-- CrowdSec / Fail2ban controls
-- Trivy vulnerability/SBOM evidence
-- Falco runtime signals
-- Wazuh telemetry
-- Cloudflare access/edge posture
-- Coolify posture checks
+Deeper Docker posture, CrowdSec/Fail2ban controls, Trivy vulnerability/SBOM evidence, Falco runtime signals, Wazuh telemetry, Cloudflare posture and Coolify checks.
 
 ### Phase 3 — Security evidence platform
 
-- normalized finding schema
-- historical reports
-- drift detection
-- evidence retention
-- remediation plans
-- policy profiles
-- signed/exportable evidence
+Normalized findings, historical reports, drift detection, evidence retention, remediation plans, policy profiles and signed/exportable evidence.
 
 ### Phase 4 — Fleet control plane
 
-- multiple VPS inventory
-- centralized dashboard/API
-- role-based access
-- fleet-wide policy
-- alerting
-- deployment integration
-- tenant isolation
+Multi-VPS inventory, centralized dashboard/API, RBAC, fleet-wide policy, alerting, deployment integration and tenant isolation.
 
 ### Phase 5 — Self-improving security system
 
-- recurring false-positive analysis
-- regression corpus
-- recommendation quality measurement
-- remediation success rates
-- environment-aware policy
-- automated evidence correlation
-- controlled learning from production incidents
+False-positive analysis, regression corpus, recommendation-quality measurement, remediation success rates, environment-aware policy and evidence correlation.
 
-The objective is not to build another generic security dashboard. The objective is to create a **compounding security operating layer for developer infrastructure**.
+The objective is a **compounding security operating layer for developer infrastructure**, not another generic dashboard.
 
 ---
 
-# Product and business flywheel
-
-The open-source CLI is the distribution engine.
+# Product flywheel
 
 ```text
 Open source
     ↓
 Developer adoption
     ↓
-Real VPS security evidence
+Real VPS evidence
     ↓
 Trust + recurring usage
     ↓
-Fleet / hosted needs emerge
+Fleet / hosted needs
     ↓
-Paid monitoring + dashboard/API
+Monitoring + dashboard/API
     ↓
-Compliance/evidence exports
+Compliance/evidence
     ↓
 Managed hardening/support
     ↓
-Enterprise policy + fleet controls
-    ↓
-More deployments
-    └──────────────→ more learning + stronger product
+Enterprise policy/fleet controls
+    └────────────→ more deployments + more learning
 ```
 
-Potential revenue layers include:
-
-- managed VPS hardening
-- fleet security monitoring
-- hosted dashboard/API
-- compliance/evidence exports
-- enterprise policy management
-- premium integrations
-- support and security operations services
-
-The repository remains useful as open source even as higher-value operational layers are added around it.
+Potential revenue layers include managed hardening, fleet monitoring, hosted dashboard/API, compliance evidence, premium integrations, enterprise policy and support.
 
 ---
 
 # Contributing
 
-The best contribution is not merely another feature. It is a measurable improvement to the security loop.
-
-Good contributions usually follow:
+Prefer improvements that strengthen the loop:
 
 ```text
-Problem
-  ↓
-Reproduce
-  ↓
-Evidence
-  ↓
-Minimal fix
-  ↓
-Regression test
-  ↓
-Verification
-  ↓
-Documentation
+Problem → reproduce → evidence → minimal fix → regression test → verify → document
 ```
 
-If a production issue or false positive appears repeatedly, turn it into a test case so the project gets harder to break over time.
+A repeated production issue or false positive should become a test so the system gets harder to break over time.
 
-See `CONTRIBUTING.md` and `SECURITY.md` before contributing security-sensitive changes.
+See `CONTRIBUTING.md` and `SECURITY.md`.
 
 ---
 
